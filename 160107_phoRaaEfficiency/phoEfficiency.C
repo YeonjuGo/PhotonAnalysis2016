@@ -19,25 +19,41 @@
 #include "TEfficiency.h"
 #include "stdio.h"
 #include "../yjUtility.h"
-#include "/cms/home/ygo/photon_run2/ElectroWeak-Jet-Track-Analyses/TreeHeaders/ggHiNtuplizerTree.h"
+#include "../ElectroWeak-Jet-Track-Analyses/TreeHeaders/ggHiNtuplizerTree.h"
 const float delta2 = 0.15*0.15;
 const float delta = 0.15;
 
 const double ptBins[] = {30,40,50,60,70,80,90,100,120,140,180,220};
 const int nPtBin = sizeof(ptBins)/sizeof(double) - 1;
 const double etaBins[] = {0.0,1.44,2.0,2.5};
-//const double etaBins[] = {0.0,0.5,1.0,1.44,2.0,2.5};
 const int nEtaBin = sizeof(etaBins)/sizeof(double) - 1;
+const int centBins[] = {0,60,200};
+const int nCentBin = sizeof(centBins)/sizeof(int) -1;
+const TString pbpbfname = "/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root";
+const TString ppfname = "/mnt/hadoop/cms/store/user/luck/2014-photon-forests/partial_PbPb_gammaJet_MC/HiForest_QCDPhoton30.root";
 
-void reco_efficiency()
+void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200)
 {
-    //TH1::SetDefaultSumw2();
+    TString fname;
+    TString outfname; 
+    if(coll=="pbpb"){ 
+        fname = pbpbfname;
+        outfname = Form("hist_efficiency_reco_pbpb_cent%d-%d.root",cent_i,cent_f);
+    }
+    else if(coll=="pp"){
+        fname = ppfname;
+        outfname = Form("hist_efficiency_reco_pp.root");
+    }
+    cout << "fname= " << fname << endl;
+    cout << "outfname= " << outfname << endl;
+
+    TH1::SetDefaultSumw2();
     gStyle->SetLabelSize(0.03,"Y");
     gStyle->SetTitleYSize(0.05);
     gStyle->SetTitleXSize(0.05);
     TFile *f;
     TTree* inTree;
-    f = new TFile(Form("/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root"));
+    f = TFile::Open(fname); 
     inTree = (TTree*) f->Get("ggHiNtuplizerGED/EventTree");
     ggHiNtuplizer pho;
     pho.setupTreeForReading(inTree);
@@ -65,7 +81,7 @@ void reco_efficiency()
     for(int ientries = 0; ientries < nentries; ++ientries){
         inTree->GetEntry(ientries);
         eventTree->GetEntry(ientries);
-
+        if(!(hiBin>=cent_i && hiBin<cent_f)) continue;
         for (int igen = 0; igen < pho.nMC; ++igen){
             if (pho.mcStatus->at(igen) != 1 || (pho.mcPID->at(igen)) != 22 ) continue;
             if (pho.mcPt->at(igen)<30) continue;
@@ -107,7 +123,7 @@ void reco_efficiency()
     h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
     //TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
 
-    TFile* outf = new TFile("hist_efficiency_reco.root", "RECREATE");
+    TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
     outf->cd();
     h2D_Num->Write();
     h2D_Den->Write();
@@ -119,15 +135,27 @@ void reco_efficiency()
 }
 
 
-void iso_efficiency()
+void iso_efficiency(const TString coll="pbpb",
+        int cent_i=0, int cent_f=200)
 {
+    TString fname;
+    TString outfname; 
+    if(coll=="pbpb"){ 
+        fname = pbpbfname;
+        outfname = Form("hist_efficiency_iso_pbpb_cent%d-%d.root",cent_i,cent_f);
+    }
+    else if(coll=="pp"){
+        fname = ppfname;
+        outfname = Form("hist_efficiency_iso_pp.root");
+    }
     //TH1::SetDefaultSumw2();
     gStyle->SetLabelSize(0.03,"Y");
     gStyle->SetTitleYSize(0.05);
     gStyle->SetTitleXSize(0.05);
     TFile *f;
     TTree* inTree;
-    f = new TFile(Form("/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root"));
+    f = TFile::Open(fname); 
+    //f = new TFile(Form("/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root"));
     inTree = (TTree*) f->Get("ggHiNtuplizerGED/EventTree");
     ggHiNtuplizer pho;
     pho.setupTreeForReading(inTree);
@@ -149,11 +177,13 @@ void iso_efficiency()
     //reconstructed photons in generated photons / generated photons
     TH2D* h2D_Eff = (TH2D*) h2D_Num->Clone("h2D_Eff");
 
+
     Long64_t nentries = inTree->GetEntries();
     for(int ientries = 0; ientries < nentries; ++ientries){
         inTree->GetEntry(ientries);
         eventTree->GetEntry(ientries);
 
+        if(!(hiBin>=cent_i && hiBin<cent_f)) continue;
         for (int igen = 0; igen < pho.nMC; ++igen){
             if (pho.mcStatus->at(igen) != 1 || (pho.mcPID->at(igen)) != 22 ) continue;
             if (pho.mcPt->at(igen)<30) continue;
@@ -188,7 +218,7 @@ void iso_efficiency()
     h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
 //    TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
 
-    TFile* outf = new TFile("hist_efficiency_iso.root", "RECREATE");
+    TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
     outf->cd();
     h2D_Num->Write();
     h2D_Den->Write();
@@ -199,10 +229,41 @@ void iso_efficiency()
     outf->Close();
 }
 
-int main(){
-    reco_efficiency();
-    iso_efficiency();
-    return 0;
+int main(int argc, char **argv){
+    gStyle -> SetOptStat(0);
+    if(argc==2){
+        for(int jj=0;jj<nCentBin;++jj){
+            TString collst; 
+            if(std::string(argv[1])=="pbpb"){ 
+                collst = Form("pbpb_cent%d-%d",centBins[jj],centBins[jj+1]);
+            }
+            else if(std::string(argv[1])=="pp"){
+                collst = Form("pp");
+                if(jj<nCentBin-1) continue;
+            }
+            cout << "collst = " << collst << endl;
+            reco_efficiency(argv[1],centBins[jj],centBins[jj+1]);
+            iso_efficiency(argv[1],centBins[jj],centBins[jj+1]);
+
+            TH1::SetDefaultSumw2();
+            TFile* freco = new TFile(Form("output/hist_efficiency_reco_%s.root",collst.Data()));
+            TH1D* hreco = (TH1D*) freco->Get("h1D_Eff_pt");
+            hreco->SetName("h1D_Eff_pt_reco");
+            TFile* fiso = new TFile(Form("output/hist_efficiency_iso_%s.root",collst.Data()));
+            TH1D* hiso = (TH1D*) fiso->Get("h1D_Eff_pt");
+            hiso->SetName("h1D_Eff_pt_iso");
+            TH1D htotal = (*hreco)*(*hiso); 
+            htotal.SetName("h1D_Eff_pt_total");
+
+            TFile* fout = new TFile(Form("output/hist_efficiency_total_%s.root",collst.Data()),"RECREATE");
+            fout->cd();
+            htotal.Write();
+            fout->Close();
+        }
+        return 0;
+    } else{
+        return 1;
+    }
 }
 
 
