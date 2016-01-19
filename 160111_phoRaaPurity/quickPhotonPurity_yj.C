@@ -20,10 +20,17 @@
 #include "TLatex.h"
 #include "stdio.h"
 #include <iostream>
-#include "PhotonPurity.h"
-#include "../Utilities/interface/CutConfigurationParser.h"
-#include "../TreeHeaders/CutConfigurationTree.h"
-#include "../Plotting/commonUtility.h"
+#include "../ElectroWeak-Jet-Track-Analyses/Histogramming/PhotonPurity.h"
+#include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
+#include "../ElectroWeak-Jet-Track-Analyses/TreeHeaders/CutConfigurationTree.h"
+#include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
+
+
+const TString ppMCfname = "/mnt/hadoop/cms/store/user/luck/2014-photon-forests/partial_PbPb_gammaJet_MC/HiForest_QCDPhoton30.root";
+const TString ppDatafname = "/mnt/hadoop/cms/store/user/luck/2015-Data-photonSkims/HighPtPhoton30AndZ/pp-photonSkim-wFilter/0.root";
+const TString pbpbMCfname = "/mnt/hadoop/cms/store/user/luck/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root";
+const TString pbpbDatafname = "/mnt/hadoop/cms/store/user/luck/2015-Data-photonSkims/HIPhoton40AndZ/PbPb-photonSkim-v1/0.root";
+const TString thisConfig = "../ElectroWeak-Jet-Track-Analyses/CutConfigurations/gamma-jet-nominal.conf";
 
 const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
 const TCut sampleIsolation = "(pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20) < 1.0 && phoHoverE<0.1";
@@ -34,12 +41,14 @@ const Double_t sigShifts[] = {0, 0, 0, 0};
 //const Double_t sigShifts[] = {-0.00015,-0.00015,-0.00015,-0.00015};
 
 // last entry is upper bound on last bin
-const Int_t CENTBINS[] = {0, 200};//, 40};
+const Int_t CENTBINS[] = {0,60, 200};//, 40};
+//const Int_t CENTBINS[] = {0, 200};//, 40};
 //const Int_t CENTBINS[] = {0, 100};
 const Int_t nCENTBINS = sizeof(CENTBINS)/sizeof(Int_t) -1;
 
 //const Double_t PTBINS[] = {40, 50, 60, 80, 1000};
-const Double_t PTBINS[] = {40,50,60, 1000};
+//const Double_t PTBINS[] = {40,50,60, 1000};
+const Double_t PTBINS[] = {60,70,80,90,100,220};
 const Int_t nPTBINS = sizeof(PTBINS)/sizeof(Double_t) -1;
 
 const Double_t ETABINS[] = {-1.44, 1.44};
@@ -54,11 +63,16 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   TTree *configTree = setupConfigurationTreeForWriting(config);
 
   TFile *dataFile = TFile::Open(inputData);
-  TTree *dataTree = (TTree*)dataFile->Get("photonSkimTree");
+  TTree *dataTree = (TTree*)dataFile->Get("ggHiNtuplizerGED/EventTree");
+  TTree *dataEvtTree = (TTree*)dataFile->Get("hiEvtAnalyzer/HiTree");
+  //TTree *dataTree = (TTree*)dataFile->Get("photonSkimTree");
 
+  dataTree->AddFriend(dataEvtTree);
   TFile *mcFile = TFile::Open(inputMC);
-  TTree *mcTree = (TTree*)mcFile->Get("photonSkimTree");
-
+  TTree *mcTree = (TTree*)mcFile->Get("ggHiNtuplizerGED/EventTree");
+  TTree *mcEvtTree = (TTree*)mcFile->Get("hiEvtAnalyzer/HiTree");
+  //TTree *mcTree = (TTree*)mcFile->Get("photonSkimTree");
+    mcTree->AddFriend(mcEvtTree);
   TFile *outFile = new TFile(outputName,"RECREATE");
 
   const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>5) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<10) && phoHoverE<0.1";
@@ -66,10 +80,11 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 
   //TCanvas *cPurity[nPTBINS];
   //TCanvas *cPurity = new TCanvas("c1","c1",337*nPTBINS,300*nCENTBINS/**2*/);
-  TCanvas *cPurity = new TCanvas("c1","c1",400*nPTBINS,400);
+  TCanvas *cPurity = new TCanvas("c1","c1",400*nPTBINS,400*nCENTBINS);
   //cPurity->Divide(nPTBINS,2*nCENTBINS,0,0);
   //cPurity->Divide(nPTBINS,nCENTBINS,0,0);
   makeMultiPanelCanvas(cPurity, nPTBINS, nCENTBINS, 0.0, 0.0 , 0.2, 0.15, 0.005);
+  cout << "nPTBINS = " << nPTBINS << ", nCENTBINS = " << nCENTBINS << ", nETABINS = " << nETABINS << endl;
   for(Int_t i = 0; i < nPTBINS; ++i) {
     //cPurity[i] = new TCanvas(Form("c1_%d",i),"",1920,1000);
     //cPurity[i]->Divide(nETABINS,2,0,0);
@@ -102,8 +117,10 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 
 	//cPurity[i*nCENTBINS+j] = new TCanvas(Form("cpurity%d",i*nCENTBINS+j),
 	// 					 "",500,500);
-	cPurity->cd(2*(k+j)*nPTBINS+i+1);
-	//cPurity->cd((k+j)*nPTBINS+i+1);
+    cout << "centBin = " << centCut << ", ptBin : " << ptCut << ",,,, canvas # : "<<2*(k+j)*nPTBINS+i+1 << endl;
+    cout << "k = " << k << ", j = " << j << ", i = " << i << endl;
+    //cPurity->cd(2*(k+j)*nPTBINS+i+1);
+	cPurity->cd((k+j)*nPTBINS+i+1);
 	//cPurity[i]->cd(k+1);
 
 	TH1F *hSigPdf = fitr.sigPdf;
