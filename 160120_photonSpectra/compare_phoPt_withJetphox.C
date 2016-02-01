@@ -3,7 +3,7 @@
 #include "../yjUtility.h"
 
 void compareTwo(TTree* t1=0 ,TTree* t2=0,TString var="pt", int nBins=10, double xMin=0, double xMax=10, TCut cut1="",TCut cut2="", const char* cap="", int numbering=1);
-void compare_phoSpectra_data_mc(TString coll="pbpb"){
+void compare_phoPt_withJetphox(TString coll="pbpb"){
 
     const char* fname_data;
     if(coll=="pp") 
@@ -11,12 +11,17 @@ void compare_phoSpectra_data_mc(TString coll="pbpb"){
     else if(coll=="pbpb")
         fname_data="/pnfs/user/ygo/HIPhoton40AndZ_pbpb_5TeV_262548_263757.root";//DATA pbpb
     const char* fname_mc="/pnfs/user/ygo/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest_5TeV_pbpbMC.root";//MC
+    const char* fname_mc2="/pnfs/user/ygo/jetphox_5020_pbpb_eps09.root";//JETPHOX
     TFile* f1 = new TFile(fname_data);
     TTree* t1 = (TTree*) f1 -> Get("ggHiNtuplizerGED/EventTree");
     TTree* t1_hlt = (TTree*) f1 -> Get("hltanalysis/HltTree");
     t1->AddFriend(t1_hlt);
     TFile* f2 = new TFile(fname_mc);
     TTree* t2 = (TTree*) f2 -> Get("ggHiNtuplizerGED/EventTree");
+    TFile* f3 = new TFile(fname_mc2);
+    TH1D* hpt_jetphox = (TH1D*) f3->Get("pt"); 
+    TH1D* heta_jetphox = (TH1D*) f3->Get("eta"); 
+    TH1D* hphi_jetphox = (TH1D*) f3->Get("phi"); 
 
     const int Neta = 4;
     TCut etCut;
