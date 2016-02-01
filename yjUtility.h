@@ -33,6 +33,37 @@ const int col[] = {1,2,3,4,6,7,28,46,41};
 const int ycol[] = {8,9,28,46,41};
 const int marker[] = {24,25,26,27,28,29,31,33,34};
 
+void saveHistogramsToPicture(TH1* h, const char* fileType="pdf", const char* caption="", const char* directoryToBeSavedIn="figures", int styleIndex=0, int rebin =1){
+    TCanvas* c1=new TCanvas();
+    if(rebin!=1)
+    {
+        h->Rebin(rebin);
+    }
+
+    if(styleIndex==1)
+    {
+        h->Draw("E");
+    }
+    else
+    {
+        h->Draw();
+        if(h->InheritsFrom("TH2"))
+        {
+            h->Draw("COLZ TEXT");    // default plot style for TH2 histograms
+        }
+    }
+
+    if(strcmp(directoryToBeSavedIn, "") == 0)   // save in the current directory if no directory is specified
+    {
+        c1->SaveAs(Form("%s_%s.%s" ,h->GetName(),caption, fileType));  // name of the file is the name of the histogram
+    }
+    else
+    {
+        c1->SaveAs(Form("%s/%s_%s.%s", directoryToBeSavedIn ,h->GetName(),caption, fileType));
+    }
+    c1->Close();
+}
+
 void yjStyleRoot(){
     gStyle -> SetOptStat(0);
     TH1::SetDefaultSumw2();

@@ -29,21 +29,24 @@ const double etaBins[] = {0.0,1.44,2.0,2.5};
 const int nEtaBin = sizeof(etaBins)/sizeof(double) - 1;
 const int centBins[] = {0,60,200};
 const int nCentBin = sizeof(centBins)/sizeof(int) -1;
-const TString pbpbfname = "/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root";
+const TString pbpbfname = "/mnt/hadoop/cms/store/user/luck/2015-PbPb-MC/AllQCDPhoton30-v0-HiForest/0.root";
+//const TString pbpbfname = "/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root";
 const TString ppfname = "/mnt/hadoop/cms/store/user/luck/2014-photon-forests/partial_PbPb_gammaJet_MC/HiForest_QCDPhoton30.root";
 
 void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200)
 {
     TString fname;
     TString outfname; 
+    const char* cap="";
     if(coll=="pbpb"){ 
         fname = pbpbfname;
-        outfname = Form("hist_efficiency_reco_pbpb_cent%d-%d.root",cent_i,cent_f);
+        cap = Form("pbpb_cent%d-%d",cent_i,cent_f);
     }
     else if(coll=="pp"){
         fname = ppfname;
-        outfname = Form("hist_efficiency_reco_pp.root");
+        cap="pp"
     }
+    outfname = Form("hist_efficiency_reco_%s.root",cap);
     cout << "fname= " << fname << endl;
     cout << "outfname= " << outfname << endl;
 
@@ -123,6 +126,8 @@ void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200)
     h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
     //TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
 
+    saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("reco_%s",cap));
+    saveHistogramsToPicture(h2D_Eff, "pdf",Form("reco_%s",cap));
     TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
     outf->cd();
     h2D_Num->Write();
@@ -140,14 +145,16 @@ void iso_efficiency(const TString coll="pbpb",
 {
     TString fname;
     TString outfname; 
+    const char* cap="";
     if(coll=="pbpb"){ 
         fname = pbpbfname;
-        outfname = Form("hist_efficiency_iso_pbpb_cent%d-%d.root",cent_i,cent_f);
+        cap = Form("pbpb_cent%d-%d",cent_i,cent_f);
     }
     else if(coll=="pp"){
         fname = ppfname;
-        outfname = Form("hist_efficiency_iso_pp.root");
+        cap = "pp";
     }
+    outfname = Form("hist_efficiency_iso_%s.root",cap);
     //TH1::SetDefaultSumw2();
     gStyle->SetLabelSize(0.03,"Y");
     gStyle->SetTitleYSize(0.05);
@@ -218,6 +225,9 @@ void iso_efficiency(const TString coll="pbpb",
     h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
 //    TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
 
+    saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("iso_cent%d-%d",cent_i,cent_f));
+    saveHistogramsToPicture(h2D_Eff, "pdf",Form("iso_cent%d-%d",cent_i,cent_f));
+ 
     TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
     outf->cd();
     h2D_Num->Write();
@@ -255,6 +265,7 @@ int main(int argc, char **argv){
             TH1D htotal = (*hreco)*(*hiso); 
             htotal.SetName("h1D_Eff_pt_total");
 
+            //saveHistogramsToPicture(htotal, "pdf");
             TFile* fout = new TFile(Form("output/hist_efficiency_total_%s.root",collst.Data()),"RECREATE");
             fout->cd();
             htotal.Write();
