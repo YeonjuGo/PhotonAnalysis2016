@@ -20,6 +20,7 @@
 #include <TTree.h>
 #include <TH1.h>
 #include <TStyle.h>
+#include <TROOT.h>
 #include <TCut.h>
 
 #include <iostream>     // std::cout

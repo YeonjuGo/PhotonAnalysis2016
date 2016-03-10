@@ -18,8 +18,10 @@
 #include "TCut.h"
 #include "TEfficiency.h"
 #include "stdio.h"
+#include <vector>
 #include "../yjUtility.h"
 #include "../ElectroWeak-Jet-Track-Analyses/TreeHeaders/ggHiNtuplizerTree.h"
+
 const float delta2 = 0.15*0.15;
 const float delta = 0.15;
 
@@ -49,7 +51,7 @@ void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200)
         fname = ppfname;
         cap="pp";
     }
-    outfname = Form("hist_efficiency_reco_%s.root",cap);
+    outfname = Form("hist_efficiency_reco_%s_nohotspot.root",cap);
     cout << "fname= " << fname << endl;
     cout << "outfname= " << outfname << endl;
 
@@ -107,6 +109,14 @@ void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200)
                     matchedIndex = ipho;
                 }
             }
+            // removing hotspot
+            if((matchedIndex!=-1) && (((pho.phoSCEta->at(matchedIndex) > -1.194 && pho.phoSCEta->at(matchedIndex) < -1.169) && (pho.phoSCPhi->at(matchedIndex) > -1.211 && pho.phoSCPhi->at(matchedIndex) < -1.162)) || ((pho.phoSCEta->at(matchedIndex) > -0.935 && pho.phoSCEta->at(matchedIndex) < -0.910) && (pho.phoSCPhi->at(matchedIndex) > 2.036 && pho.phoSCPhi->at(matchedIndex) < 2.065)) || ((pho.phoSCEta->at(matchedIndex) > -0.850 && pho.phoSCEta->at(matchedIndex) < -0.819) && (pho.phoSCPhi->at(matchedIndex) > -1.723 && pho.phoSCPhi->at(matchedIndex) < -1.676)) || ((pho.phoSCEta->at(matchedIndex) > -0.764 && pho.phoSCEta->at(matchedIndex) < -0.723) && (pho.phoSCPhi->at(matchedIndex) > -0.786 && pho.phoSCPhi->at(matchedIndex) < -0.720)) || ((pho.phoSCEta->at(matchedIndex) > -0.237 && pho.phoSCEta->at(matchedIndex) < -0.210) && (pho.phoSCPhi->at(matchedIndex) > 0.106 && pho.phoSCPhi->at(matchedIndex) < 0.147)) ||((pho.phoSCEta->at(matchedIndex) > -0.062 && pho.phoSCEta->at(matchedIndex) < -0.036) && (pho.phoSCPhi->at(matchedIndex) > 0.860 && pho.phoSCPhi->at(matchedIndex)< 0.931)) || ((pho.phoSCEta->at(matchedIndex) > 0.973 && pho.phoSCEta->at(matchedIndex) < 1.035) && (pho.phoSCPhi->at(matchedIndex) > 0.623 && pho.phoSCPhi->at(matchedIndex) < 0.697)) || ((pho.phoSCEta->at(matchedIndex) > 1.075 && pho.phoSCEta->at(matchedIndex) < 1.108) && (pho.phoSCPhi->at(matchedIndex) > -3.114 && pho.phoSCPhi->at(matchedIndex) < -3.054)) || ((pho.phoSCEta->at(matchedIndex) > 1.426 && pho.phoSCEta->at(matchedIndex) < 1.447) && (pho.phoSCPhi->at(matchedIndex) > 2.744 && pho.phoSCPhi->at(matchedIndex) < 2.774)) || ((pho.phoSCEta->at(matchedIndex) > 0.915 && pho.phoSCEta->at(matchedIndex) < 0.930) && (pho.phoSCPhi->at(matchedIndex) > 1.69 && pho.phoSCPhi->at(matchedIndex) < 1.72)))) { 
+                matchedIndex=-1; 
+                nhotspot++;
+                    cout << "this is " << nhotspot << "th hotspot" << endl;
+            }
+
+
             /*
                for(int ipho = 0; ipho < pho.nPho; ipho++){
                if(pho.pho_genMatchedIndex->at(ipho)!=-1) 
@@ -129,8 +139,8 @@ void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200)
     h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
     //TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
 
-    saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("reco_%s",cap));
-    saveHistogramsToPicture(h2D_Eff, "pdf",Form("reco_%s",cap));
+    saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("reco_%s_nohotspot",cap));
+    saveHistogramsToPicture(h2D_Eff, "pdf",Form("reco_%s_nohotspot",cap));
     TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
     outf->cd();
     h2D_Num->Write();
@@ -157,7 +167,7 @@ void iso_efficiency(const TString coll="pbpb",
         fname = ppfname;
         cap = "pp";
     }
-    outfname = Form("hist_efficiency_iso_%s.root",cap);
+    outfname = Form("hist_efficiency_iso_%s_nohotspot.root",cap);
     //TH1::SetDefaultSumw2();
     gStyle->SetLabelSize(0.03,"Y");
     gStyle->SetTitleYSize(0.05);
@@ -165,7 +175,7 @@ void iso_efficiency(const TString coll="pbpb",
     TFile *f;
     TTree* inTree;
     f = TFile::Open(fname); 
-    //f = new TFile(Form("/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root"));
+    //f = new TFile(Form("/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest_nohotspot.root"));
     inTree = (TTree*) f->Get("ggHiNtuplizer/EventTree");
     ggHiNtuplizer pho;
     pho.setupTreeForReading(inTree);
@@ -211,6 +221,11 @@ void iso_efficiency(const TString coll="pbpb",
                     matchedIndex = ipho;
                 }
             }
+            // removing hotspot
+            if((matchedIndex!=-1) && (((pho.phoSCEta->at(matchedIndex) > -1.194 && pho.phoSCEta->at(matchedIndex) < -1.169) && (pho.phoSCPhi->at(matchedIndex) > -1.211 && pho.phoSCPhi->at(matchedIndex) < -1.162)) || ((pho.phoSCEta->at(matchedIndex) > -0.935 && pho.phoSCEta->at(matchedIndex) < -0.910) && (pho.phoSCPhi->at(matchedIndex) > 2.036 && pho.phoSCPhi->at(matchedIndex) < 2.065)) || ((pho.phoSCEta->at(matchedIndex) > -0.850 && pho.phoSCEta->at(matchedIndex) < -0.819) && (pho.phoSCPhi->at(matchedIndex) > -1.723 && pho.phoSCPhi->at(matchedIndex) < -1.676)) || ((pho.phoSCEta->at(matchedIndex) > -0.764 && pho.phoSCEta->at(matchedIndex) < -0.723) && (pho.phoSCPhi->at(matchedIndex) > -0.786 && pho.phoSCPhi->at(matchedIndex) < -0.720)) || ((pho.phoSCEta->at(matchedIndex) > -0.237 && pho.phoSCEta->at(matchedIndex) < -0.210) && (pho.phoSCPhi->at(matchedIndex) > 0.106 && pho.phoSCPhi->at(matchedIndex) < 0.147)) ||((pho.phoSCEta->at(matchedIndex) > -0.062 && pho.phoSCEta->at(matchedIndex) < -0.036) && (pho.phoSCPhi->at(matchedIndex) > 0.860 && pho.phoSCPhi->at(matchedIndex)< 0.931)) || ((pho.phoSCEta->at(matchedIndex) > 0.973 && pho.phoSCEta->at(matchedIndex) < 1.035) && (pho.phoSCPhi->at(matchedIndex) > 0.623 && pho.phoSCPhi->at(matchedIndex) < 0.697)) || ((pho.phoSCEta->at(matchedIndex) > 1.075 && pho.phoSCEta->at(matchedIndex) < 1.108) && (pho.phoSCPhi->at(matchedIndex) > -3.114 && pho.phoSCPhi->at(matchedIndex) < -3.054)) || ((pho.phoSCEta->at(matchedIndex) > 1.426 && pho.phoSCEta->at(matchedIndex) < 1.447) && (pho.phoSCPhi->at(matchedIndex) > 2.744 && pho.phoSCPhi->at(matchedIndex) < 2.774)) || ((pho.phoSCEta->at(matchedIndex) > 0.915 && pho.phoSCEta->at(matchedIndex) < 0.930) && (pho.phoSCPhi->at(matchedIndex) > 1.69 && pho.phoSCPhi->at(matchedIndex) < 1.72)))) { 
+                matchedIndex=-1; 
+            }
+
             if(matchedIndex!=-1) {
                 h2D_Den->Fill(abs(pho.mcEta->at(igen)), pho.mcEt->at(igen));
                 float sumIso = pho.pho_ecalClusterIsoR4->at(matchedIndex) + pho.pho_hcalRechitIsoR4->at(matchedIndex) + pho.pho_trackIsoR4PtCut20->at(matchedIndex);
@@ -227,8 +242,8 @@ void iso_efficiency(const TString coll="pbpb",
     h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
 //    TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
 
-    saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("iso_%s",cap));
-    saveHistogramsToPicture(h2D_Eff, "pdf",Form("iso_%s",cap));
+    saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("iso_%s_nohotspot",cap));
+    saveHistogramsToPicture(h2D_Eff, "pdf",Form("iso_%s_nohotspot",cap));
  
     TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
     outf->cd();
@@ -243,6 +258,7 @@ void iso_efficiency(const TString coll="pbpb",
 
 int main(int argc, char **argv){
     gROOT->ProcessLine("#include <vector>");
+//    gROOT->ProcessLine("#include <vector>");
     gStyle -> SetOptStat(0);
     if(argc==2){
         for(int jj=0;jj<nCentBin;++jj){
@@ -259,17 +275,17 @@ int main(int argc, char **argv){
             iso_efficiency(argv[1],centBins[jj],centBins[jj+1]);
 
             TH1::SetDefaultSumw2();
-            TFile* freco = new TFile(Form("output/hist_efficiency_reco_%s.root",collst.Data()));
+            TFile* freco = new TFile(Form("output/hist_efficiency_reco_%s_nohotspot.root",collst.Data()));
             TH1D* hreco = (TH1D*) freco->Get("h1D_Eff_pt");
             hreco->SetName("h1D_Eff_pt_reco");
-            TFile* fiso = new TFile(Form("output/hist_efficiency_iso_%s.root",collst.Data()));
+            TFile* fiso = new TFile(Form("output/hist_efficiency_iso_%s_nohotspot.root",collst.Data()));
             TH1D* hiso = (TH1D*) fiso->Get("h1D_Eff_pt");
             hiso->SetName("h1D_Eff_pt_iso");
             TH1D htotal = (*hreco)*(*hiso); 
             htotal.SetName("h1D_Eff_pt_total");
 
             //saveHistogramsToPicture(htotal, "pdf");
-            TFile* fout = new TFile(Form("output/hist_efficiency_total_%s.root",collst.Data()),"RECREATE");
+            TFile* fout = new TFile(Form("output/hist_efficiency_total_%s_nohotspot.root",collst.Data()),"RECREATE");
             fout->cd();
             htotal.Write();
             fout->Close();

@@ -26,9 +26,10 @@
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
 
 ///// KNU
-const TString ppDatafname = "/d3/scratch/goyeonju/files/photons2016/2015-Data-promptRECO-photonSkims_pp-photonHLTFilter-v0-HiForest.root";
-const TString ppMCfname = "/d3/scratch/goyeonju/files/photons2016/2015-PP-MC_Pythia8_Photon30_pp502_TuneCUETP8M1.root";
-const TString pbpbMCfname = "/d3/scratch/goyeonju/files/photons2016/2015-PbPb-MC_AllQCDPhoton30-v0-HiForest_PYTHIA_HYDJET_160129.root";
+const TString ppMCfname = "/d3/scratch/goyeonju/files/photons2016/2015-Data-promptRECO-photonSkims_pp-photonHLTFilter-v0-HiForest.root";
+const TString ppDatafname = "/d3/scratch/goyeonju/files/photons2016/2015-PP-MC_Pythia8_Photon30_pp502_TuneCUETP8M1.root";
+//const TString pbpbMCfname = "/d3/scratch/goyeonju/files/photons2016/2015-PbPb-MC_AllQCDPhoton30-v0-HiForest_PYTHIA_HYDJET_160129.root";
+const TString pbpbMCfname = "/u/user/goyeonju/scratch/files/photons2016/2015-PbPb-MC_AllQCDPhoton30_v1/0.root";
 const TString pbpbDatafname = "/d3/scratch/goyeonju/files/photons2016/forestSkimed_photonSkim_pbpb_2015data.root";
 
 ///// MIT
@@ -62,7 +63,7 @@ const Double_t ETABINS[] = {-1.44, 1.44};
 //const Double_t ETABINS[] = {-1.44, -1, -0.5, 0, 0.5, 1, 1.44};
 const Int_t nETABINS = sizeof(ETABINS)/sizeof(Double_t) -1;
 
-void quickPhotonPurity(const TString configFile, const TString inputData, const TString inputMC, const TString outputName, const TString coll="pbpb")
+void quickPhotonPurity_yj_multiTreeUtil(const TString configFile, const TString inputData, const TString inputMC, const TString outputName, const TString coll="pbpb")
 {
   TH1::SetDefaultSumw2();
   CutConfiguration config = CutConfigurationParser::Parse(configFile.Data());
@@ -77,7 +78,8 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
       hitreeSt="hiEvtAnalyzer/HiTree";
   } 
 
-  TFile *dataFile = TFile::Open(inputData);
+  TFile *dataFile = TFile::Open(pbpbDatafname);
+  //TFile *dataFile = TFile::Open(inputData);
   TTree *dataTree = (TTree*)dataFile->Get(photreeSt);
   TTree *dataEvtTree = (TTree*)dataFile->Get(hitreeSt);
 //  TTree *dataTree = (TTree*)dataFile->Get("ggHiNtuplizer/EventTree");
@@ -85,7 +87,8 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   //TTree *dataTree = (TTree*)dataFile->Get("photonSkimTree");
 
   dataTree->AddFriend(dataEvtTree);
-  TFile *mcFile = TFile::Open(inputMC);
+  TFile *mcFile = TFile::Open(pbpbMCfname);
+  //TFile *mcFile = TFile::Open(inputMC);
   TTree *mcTree = (TTree*)mcFile->Get("ggHiNtuplizer/EventTree");
   TTree *mcEvtTree = (TTree*)mcFile->Get("hiEvtAnalyzer/HiTree");
   //TTree *mcTree = (TTree*)mcFile->Get("photonSkimTree");
@@ -93,7 +96,6 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   TFile *outFile = new TFile(outputName,"RECREATE");
 
   const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>10) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<20) && phoHoverE<0.1";
-  //const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>5) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<10) && phoHoverE<0.1";
   const TCut mcIsolation = "(pho_genMatchedIndex!= -1) && mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])<=22";
     cout << "JJ" << endl;
   //TCanvas *cPurity[nPTBINS];
@@ -295,7 +297,7 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 int main(int argc, char **argv)
 {
   if(argc == 6){
-    quickPhotonPurity(argv[1], argv[2], argv[3], argv[4], argv[5]);
+    quickPhotonPurity_yj_multiTreeUtil(argv[1], argv[2], argv[3], argv[4], argv[5]);
   return 0;
   } else {
     cout << "wrong argument" << endl;
