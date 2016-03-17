@@ -69,9 +69,11 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   TTree *configTree = setupConfigurationTreeForWriting(config);
    const char* photreeSt="";
    const char* hitreeSt="";
+   const char* skimSt="";
   if(coll=="pbpb") {
       photreeSt="EventTree";
       hitreeSt="HiTree";
+      skimSt="HltTree";
   } else {
       photreeSt="ggHiNtuplizer/EventTree";
       hitreeSt="hiEvtAnalyzer/HiTree";
@@ -80,14 +82,18 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   TFile *dataFile = TFile::Open(inputData);
   TTree *dataTree = (TTree*)dataFile->Get(photreeSt);
   TTree *dataEvtTree = (TTree*)dataFile->Get(hitreeSt);
+  TTree *dataSkimTree= (TTree*)dataFile->Get(skimSt);
 //  TTree *dataTree = (TTree*)dataFile->Get("ggHiNtuplizer/EventTree");
 //  TTree *dataEvtTree = (TTree*)dataFile->Get("hiEvtAnalyzer/HiTree");
   //TTree *dataTree = (TTree*)dataFile->Get("photonSkimTree");
 
   dataTree->AddFriend(dataEvtTree);
+  dataTree->AddFriend(dataSkimTree);
   TFile *mcFile = TFile::Open(inputMC);
-  TTree *mcTree = (TTree*)mcFile->Get("ggHiNtuplizer/EventTree");
-  TTree *mcEvtTree = (TTree*)mcFile->Get("hiEvtAnalyzer/HiTree");
+  TTree *mcTree = (TTree*)mcFile->Get("EventTree");
+  TTree *mcEvtTree = (TTree*)mcFile->Get("HiTree");
+  //TTree *mcTree = (TTree*)mcFile->Get("ggHiNtuplizer/EventTree");
+  //TTree *mcEvtTree = (TTree*)mcFile->Get("hiEvtAnalyzer/HiTree");
   //TTree *mcTree = (TTree*)mcFile->Get("photonSkimTree");
     mcTree->AddFriend(mcEvtTree);
   TFile *outFile = new TFile(outputName,"RECREATE");
@@ -95,7 +101,11 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>10) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<20) && phoHoverE<0.1";
   //const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>5) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<10) && phoHoverE<0.1";
   const TCut mcIsolation = "(pho_genMatchedIndex!= -1) && mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])<=22";
-    cout << "JJ" << endl;
+  const TCut spikeRejection = "(phoSigmaIEtaIEta_2012>=0.002) && (pho_swissCrx<=0.9) && (abs(pho_seedTime)<=3)";
+  const TCut evtSel= "pcollisionEventSelection";
+    //const TCut spikeRejection = "!((phoSigmaIEtaIEta_2012<0.002) || (pho_swissCrx>0.9) || (abs(pho_seedTime)>3))";
+
+  cout << "JJ" << endl;
   //TCanvas *cPurity[nPTBINS];
   //TCanvas *cPurity = new TCanvas("c1","c1",337*nPTBINS,300*nCENTBINS/**2*/);
   TCanvas *cPurity = new TCanvas("c1","c1",400*nPTBINS,400*nCENTBINS);
@@ -121,8 +131,9 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 	//TString pPbflipetaCut = Form("(eta*((run>211257)*-1+(run<211257)) >=%f) && (eta*((run>211257)*-1+(run<211257)) <%f)",
 	//			     ETABINS[k], ETABINS[k+1]);
 
-	TCut dataCandidateCut = sampleIsolation && etaCut && ptCut && centCut;
-	TCut sidebandCut =  sidebandIsolation && etaCut && ptCut && centCut;
+	TCut dataCandidateEvtSelCut = sampleIsolation && etaCut && ptCut && centCut && spikeRejection && evtSel;
+	TCut dataCandidateCut = sampleIsolation && etaCut && ptCut && centCut && spikeRejection;
+	TCut sidebandCut =  sidebandIsolation && etaCut && ptCut && centCut && spikeRejection && evtSel;
 	TCut mcSignalCut = dataCandidateCut && mcIsolation;
 
 	// if(nETABINS != 1)
@@ -133,7 +144,7 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 	// }
 
 	PhotonPurity fitr = getPurity(config, dataTree, mcTree,
-				      dataCandidateCut, sidebandCut,
+				      dataCandidateEvtSelCut, sidebandCut,
 				      mcSignalCut);
 
 	//cPurity[i*nCENTBINS+j] = new TCanvas(Form("cpurity%d",i*nCENTBINS+j),
