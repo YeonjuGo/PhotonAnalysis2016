@@ -24,7 +24,8 @@
 #include "../ElectroWeak-Jet-Track-Analyses/Utilities/interface/CutConfigurationParser.h"
 #include "../ElectroWeak-Jet-Track-Analyses/TreeHeaders/CutConfigurationTree.h"
 #include "../ElectroWeak-Jet-Track-Analyses/Plotting/commonUtility.h"
-
+#include "../phoRaaCuts_v1.h"
+/*
 ///// KNU
 const TString ppDatafname = "/d3/scratch/goyeonju/files/photons2016/2015-Data-promptRECO-photonSkims_pp-photonHLTFilter-v0-HiForest.root";
 const TString ppMCfname = "/d3/scratch/goyeonju/files/photons2016/2015-PP-MC_Pythia8_Photon30_pp502_TuneCUETP8M1.root";
@@ -37,9 +38,10 @@ const TString pbpbDatafname = "/d3/scratch/goyeonju/files/photons2016/forestSkim
 //const TString pbpbMCfname = "/mnt/hadoop/cms/store/user/luck/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root";
 //const TString pbpbDatafname = "/mnt/hadoop/cms/store/user/luck/2015-Data-photonSkims/HIPhoton40AndZ/PbPb-photonSkim-v1/0.root";
 //const TString thisConfig = "../ElectroWeak-Jet-Track-Analyses/CutConfigurations/gamma-jet-nominal.conf";
-
+*/
 const TString LABEL = "PbPb #sqrt{s}_{_{NN}}=5.02 TeV";
-const TCut sampleIsolation = "(pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20) < 1.0 && phoHoverE<0.1";
+const TCut sampleIsolation_pbpb = "(pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20) < 1.0 && phoHoverE<0.1";
+const TCut sampleIsolation_pp = "((pfcIso4<=1.37) && (pfnIso4<=1.06+0.014*phoEt+0.000019*phoEt*phoEt) && pfpIso4<=(0.28+0.0053*phoEt)) && phoHoverE<0.1";
 
 
 //const Double_t sigShifts[] = {-0.0000989, -0.000131273, -0.00016207, -0.000170555};
@@ -75,10 +77,11 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
       hitreeSt="HiTree";
       skimSt="HltTree";
   } else {
-      photreeSt="ggHiNtuplizer/EventTree";
+      photreeSt="ggHiNtuplizerGED/EventTree";
       hitreeSt="hiEvtAnalyzer/HiTree";
+      skimSt="skimanalysis/HltTree";
   } 
-
+ cout << "s1" << endl;
   TFile *dataFile = TFile::Open(inputData);
   TTree *dataTree = (TTree*)dataFile->Get(photreeSt);
   TTree *dataEvtTree = (TTree*)dataFile->Get(hitreeSt);
@@ -90,19 +93,23 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   dataTree->AddFriend(dataEvtTree);
   dataTree->AddFriend(dataSkimTree);
   TFile *mcFile = TFile::Open(inputMC);
-  TTree *mcTree = (TTree*)mcFile->Get("EventTree");
-  TTree *mcEvtTree = (TTree*)mcFile->Get("HiTree");
+  TTree *mcTree = (TTree*)mcFile->Get(photreeSt);
+  TTree *mcEvtTree = (TTree*)mcFile->Get(hitreeSt);
   //TTree *mcTree = (TTree*)mcFile->Get("ggHiNtuplizer/EventTree");
   //TTree *mcEvtTree = (TTree*)mcFile->Get("hiEvtAnalyzer/HiTree");
   //TTree *mcTree = (TTree*)mcFile->Get("photonSkimTree");
     mcTree->AddFriend(mcEvtTree);
+ cout << "skk" << endl;
+  //TTree *mcTree = (TTree*)mcFile->Get("ggHiNtuplizer/EventTree");
   TFile *outFile = new TFile(outputName,"RECREATE");
 
   const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>10) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<20) && phoHoverE<0.1";
   //const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>5) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<10) && phoHoverE<0.1";
   const TCut mcIsolation = "(pho_genMatchedIndex!= -1) && mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])<=22";
   const TCut spikeRejection = "(phoSigmaIEtaIEta_2012>=0.002) && (pho_swissCrx<=0.9) && (abs(pho_seedTime)<=3)";
-  const TCut evtSel= "pcollisionEventSelection";
+  TCut evtSel="";
+ if(coll=="pbpb") evtSel = "pcollisionEventSelection";
+ else if(coll=="pp") evtSel = "(pBeamScrapingFilter && pPAprimaryVertexFilter && pVertexFilterCutEandG)";
     //const TCut spikeRejection = "!((phoSigmaIEtaIEta_2012<0.002) || (pho_swissCrx>0.9) || (abs(pho_seedTime)>3))";
 
   cout << "JJ" << endl;
@@ -113,11 +120,19 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   //cPurity->Divide(nPTBINS,nCENTBINS,0,0);
   makeMultiPanelCanvas(cPurity, nPTBINS, nCENTBINS, 0.0, 0.0 , 0.2, 0.15, 0.005);
   cout << "nPTBINS = " << nPTBINS << ", nCENTBINS = " << nCENTBINS << ", nETABINS = " << nETABINS << endl;
+  ////////////
+  TH1D* h1D_p[nCentBin];
+  for(Int_t j = 0; j < nCENTBINS; ++j) {
+      h1D_p[j]= new TH1D(Form("h1D_purity_cent%d",j), ";p_{T} (GeV);Purity", nPtBin, ptBins);
+  }
+  int temp_nCentBin = nCENTBINS;
+  if(coll=="pp") temp_nCentBin = 1;
+  /////////////////
   for(Int_t i = 0; i < nPTBINS; ++i) {
     cout << "i : " << i << endl;
-    //cPurity[i] = new TCanvas(Form("c1_%d",i),"",1920,1000);
+    //cPurity[i] = new TCanvggas(Form("c1_%d",i),"",1920,1000);
     //cPurity[i]->Divide(nETABINS,2,0,0);
-    for(Int_t j = 0; j < nCENTBINS; ++j) {
+    for(Int_t j = 0; j < temp_nCentBin; ++j) {
     cout << "j : " << j << endl;
       for(Int_t k = 0; k< nETABINS; ++k) {
     cout << "k : " << k << endl;
@@ -128,9 +143,13 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 	TString etaCut = Form("(phoEta >= %f) && (phoEta < %f)",
 			      ETABINS[k], ETABINS[k+1]);
 
+    if(coll=="pp") centCut = "(1)"; 
+    
 	//TString pPbflipetaCut = Form("(eta*((run>211257)*-1+(run<211257)) >=%f) && (eta*((run>211257)*-1+(run<211257)) <%f)",
 	//			     ETABINS[k], ETABINS[k+1]);
-
+    TCut sampleIsolation = "";
+    if(coll=="pbpb") sampleIsolation = sampleIsolation_pbpb; 
+    else if(coll=="pp") sampleIsolation = sampleIsolation_pp; 
 	TCut dataCandidateEvtSelCut = sampleIsolation && etaCut && ptCut && centCut && spikeRejection && evtSel;
 	TCut dataCandidateCut = sampleIsolation && etaCut && ptCut && centCut && spikeRejection;
 	TCut sidebandCut =  sidebandIsolation && etaCut && ptCut && centCut && spikeRejection && evtSel;
@@ -266,6 +285,11 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
 	drawText(Form("#chi^{2}/ndf : %.2f", (Float_t)fitr.chisq),
 		 xpos, 0.45,1,20);
 
+    /////// MAKE HIST //////////
+    //TH2D* h2D_Num = new TH2D("h2D_Num", ";|#eta|;p_{T} (GeV)", nEtaBin, etaBins, nPtBin, ptBins);
+    h1D_p[j]->SetBinContent(i,(Float_t)fitr.purity);        
+
+
 
 	// //plot ratio
 	// cPurity->cd((2*(j+k)+1)*nPTBINS+i+1);
@@ -297,6 +321,9 @@ void quickPhotonPurity(const TString configFile, const TString inputData, const 
   outFile->cd();
   configTree->Write();
   cPurity->Write();
+    for(int j=0;j<temp_nCentBin;j++){
+  h1D_p[j]->Write();
+    }
   outFile->Close();
   //cPurity->SaveAs(SAVENAME+".C");
   //cPurity->SaveAs(SAVENAME+".png");
