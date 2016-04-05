@@ -1,9 +1,29 @@
-#ifndef phoRaaCuts_v1_H
-#define phoRaaCuts_v1_H
+#ifndef phoRaaCuts_v2_H
+#define phoRaaCuts_v2_H
 
 #include <TCut.h>
 
 #define PI 3.141592653589
+
+enum sampleType { kHIDATA, kHIMC, kHIMCEmEnr, kPPDATA, kPPMC, kPPMCEmEnr};
+TString getSampleName ( sampleType colli) {
+    if (colli == kHIDATA) return "pbpbDATA";
+    if (colli == kHIMC) return "pbpbMC";
+    if (colli == kHIMCEmEnr) return "pbpbMCEmEnr";
+    if (colli == kPPDATA) return "ppDATA";
+    if (colli == kPPMC) return "ppMC";
+    if (colli == kPPMCEmEnr) return "ppMCEmEnr";
+    return "NULL";
+}
+TString getSampleName ( int colli) {
+    if (colli == kHIDATA) return "pbpbDATA";
+    if (colli == kHIMC) return "pbpbMC";
+    if (colli == kHIMCEmEnr) return "pbpbMCEmEnr";
+    if (colli == kPPDATA) return "ppDATA";
+    if (colli == kPPMC) return "ppMC";
+    if (colli == kPPMCEmEnr) return "ppMCEmEnr";
+    return "NULL";
+}
 
 TString ppDatafname = "/home/goyeonju/CMS/Files/photon2016/2015-Data-promptRECO-photonSkims_pp-photonHLTFilter-v0-HiForest.root";
 TString ppMCfname = "/home/goyeonju/CMS/Files/photon2016/2015-PP-MC_Pythia8_Photon30_pp502_TuneCUETP8M1.root";
@@ -33,6 +53,7 @@ const TCut hoeCut = "phoHoverE<0.1";
 const TCut sumIsoCut = "(pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20) < 1.0";
 const TCut sigmaCut = "(phoSigmaIEtaIEta_2012)<0.0102";
 const TCut hotspotCut = "!(((phoSCEta > -1.194 && phoSCEta < -1.169) && (phoSCPhi > -1.211 && phoSCPhi < -1.162)) || ((phoSCEta > -0.935 && phoSCEta < -0.910) && (phoSCPhi > 2.036 && phoSCPhi < 2.065)) || ((phoSCEta > -0.850 && phoSCEta < -0.819) && (phoSCPhi > -1.723 && phoSCPhi < -1.676)) || ((phoSCEta > -0.764 && phoSCEta < -0.723) && (phoSCPhi > -0.786 && phoSCPhi < -0.720)) || ((phoSCEta > -0.237 && phoSCEta < -0.210) && (phoSCPhi > 0.106 && phoSCPhi < 0.147)) ||((phoSCEta > -0.062 && phoSCEta < -0.036) && (phoSCPhi > 0.860 && phoSCPhi< 0.931)) || ((phoSCEta > 0.973 && phoSCEta < 1.035) && (phoSCPhi > 0.623 && phoSCPhi < 0.697)) || ((phoSCEta > 1.075 && phoSCEta < 1.108) && (phoSCPhi > -3.114 && phoSCPhi < -3.054)) || ((phoSCEta > 1.426 && phoSCEta < 1.447) && (phoSCPhi > 2.744 && phoSCPhi < 2.774)) || ((phoSCEta > 0.915 && phoSCEta < 0.930) && (phoSCPhi > 1.69 && phoSCPhi < 1.72)))";
+//const TCut hotspotCut = "!((e3x3/e5x5 > 2/3-0.03 && e3x3/e5x5 < 2/3+0.03) && (e1x5/e5x5 > 1/3-0.03 && e1x5/e5x5 < 1/3+0.03) && (e2x5/e5x5 > 2/3-0.03 && e2x5/e5x5 < 2/3+0.03))";
 
 const TCut phoSignalCut = hoeCut && sumIsoCut && sigmaCut && hotspotCut;
 
@@ -45,10 +66,8 @@ const TCut phoSignalCut_ppGED = isoCut_ppGED && hoeCut_ppGED && sigmaCut_ppGED;
 
 
 const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>10) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<20) && phoHoverE<0.1";
-//const TCut sidebandIsolation = "((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)>5) && ((pho_ecalClusterIsoR4 + pho_hcalRechitIsoR4 + pho_trackIsoR4PtCut20)<10) && phoHoverE<0.1";
-const TCut mcIsolation = "(pho_genMatchedIndex!= -1) && mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])<=22";
-//const TCut mcIsolation = "(pho_genMatchedIndex!= -1) && mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])==22 && (abs(mcMomPID[pho_genMatchedIndex])<=22 || mcMomPID[pho_genMatchedIndex]==-999)";
-const TCut mcBkgIsolation = "(pho_genMatchedIndex!= -1) && (mcCalIsoDR04[pho_genMatchedIndex]>=5 || abs(mcPID[pho_genMatchedIndex])>22)";
+const TCut mcIsolation = "(pho_genMatchedIndex!= -1) && mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])==22 && (abs(mcMomPID[pho_genMatchedIndex])<=22 || mcMomPID[pho_genMatchedIndex]==-999)";
+const TCut mcBkgIsolation = "(pho_genMatchedIndex!= -1) && !(mcCalIsoDR04[pho_genMatchedIndex]<5 && abs(mcPID[pho_genMatchedIndex])==22 && (abs(mcMomPID[pho_genMatchedIndex])<=22 || mcMomPID[pho_genMatchedIndex]==-999))"; 
 
 TString pbpbEff_fname_cent1 = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/160107_phoRaaEfficiency/output/hist_efficiency_total_pbpb_cent0-60_v1_nohotspot.root";
 TString pbpbEff_fname_cent2 = "/home/goyeonju/CMS/2016/PhotonAnalysis2016/160107_phoRaaEfficiency/output/hist_efficiency_total_pbpb_cent60-200_v1_nohotspot.root";

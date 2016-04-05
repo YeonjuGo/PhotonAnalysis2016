@@ -8,57 +8,105 @@
 #include "TTree.h"
 #include "TCanvas.h"
 #include "TDirectory.h"
+#include "../phoRaaCuts/phoRaaCuts_v2.h"
 #include <stdlib.h>
 using namespace std;
 
-void xSecCal(){
-    int pthatCut[] = {15,30,50,80,120,9999};
-    const int nFile = sizeof(pthatCut)/sizeof(int)-1;
-    
-    //pbpb
-    const char *fileName[nFile] = {
-        "/u/user/goyeonju/scratch/files/photons2016/2015-PbPb-MC_AllQCDPhoton15_v1/0.root",
-        "/u/user/goyeonju/scratch/files/photons2016/2015-PbPb-MC_AllQCDPhoton30_v1/0.root",
-        "/u/user/goyeonju/scratch/files/photons2016/2015-PbPb-MC_AllQCDPhoton50_v1/0.root",
-        "/u/user/goyeonju/scratch/files/photons2016/2015-PbPb-MC_AllQCDPhoton80_v1/0.root",
-        "/u/user/goyeonju/scratch/files/photons2016/2015-PbPb-MC_AllQCDPhoton120_v1/0.root",
-   };
+void xSecCal(sampleType colli=kPPMC){
+//void xSecCal(string coll = "pp", string channel = "AllQCDPhoton"){
+    int nPthat = 5; 
+    const int nFile = 2;
+    const char *fileName[nFile];
+
+    if(colli==kPPMCEmEnr) nPthat=4;
+    const char* lowestPthatFileName;
+    float pthatCut[nPthat];
+
+    if(colli==kPPMC) {
+        float temp[] = {15,30,50,80,120,9999};
+        for(int j=0;j<nPthat+1;j++){
+            pthatCut[j] = temp[j];     
+        }
+//        fileName[0] = "/home/goyeonju/CMS/Files/photon2016/officialMC/HINppWinter16DR/Pythia8_Photon15_pp502_TuneCUETP8M1-HINppWinter16DR-75X_mcRun2_asymptotic_ppAt5TeV_v3-v1_forest_v1.root";
+//        fileName[1]= "/home/goyeonju/CMS/Files/photon2016/officialMC/HINppWinter16DR/Pythia8_Photon15_30_50_80_120_pp502_TuneCUETP8M1-HINppWinter16DR-75X_mcRun2_asymptotic_ppAt5TeV_v3-v1_forest_v1.root";
+        fileName[0] = "/home/goyeonju/CMS/Files/photon2016/gsfs-Pythia8_Photon_pp_RECO_forest_v28/gsfs-Pythia8_Photon15_pp_RECO_forest_v28.root";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/gsfs-Pythia8_Photon_pp_RECO_forest_v28/gsfs-Pythia8_Photon15_30_50_80_120_pp_RECO_forest_v28.root";
+   } else if(colli==kHIMC) {
+        float temp[] = {15,30,50,80,120,9999};
+        for(int j=0;j<nPthat+1;j++){
+            pthatCut[j] = temp[j];     
+        }
+        //fileName[0] = "/home/goyeonju/CMS/Files/photon2016/officialMC/HINPbPbWinter16DR/Pythia8_Photon15_Hydjet_MB-HINPbPbWinter16DR-75X_mcRun2_HeavyIon_forest_v1.root";
+       // fileName[1]= "/home/goyeonju/CMS/Files/photon2016/officialMC/HINPbPbWinter16DR/Pythia8_Photon15_30_50_80_120_Hydjet_MB-HINPbPbWinter16DR-75X_mcRun2_HeavyIon_forest_v1.root";
+        fileName[0] ="/home/goyeonju/CMS/Files/photon2016/Pythia8_Photon_Hydjet_RECO_20160306_forest_v28_2/Pythia8_Photon15_Hydjet_RECO_20160306_forest_v28_2.root";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/Pythia8_Photon_Hydjet_RECO_20160306_forest_v28_2/Pythia8_Photon15_30_50_80_120_Hydjet_RECO_20160306_forest_v28_2.root";
+ 
+    } else if(colli==kPPMCEmEnr) {
+        float temp[] = {50,80,120,170,9999};
+        for(int j=0;j<nPthat+1;j++){
+            pthatCut[j] = temp[j];         
+        }
+        //fileName[0] = "Pythia8_EmEnrDijet50_pp502_TuneCUETP8M1-HINppWinter16DR-75X_mcRun2_asymptotic_ppAt5TeV_forest_v1.root";
+        //fileName[1]= "Pythia8_EmEnrDijet50_80_120_170_pp502_TuneCUETP8M1-HINppWinter16DR-75X_mcRun2_asymptotic_ppAt5TeV_forest_v1.root";
+        fileName[0] ="/home/goyeonju/CMS/Files/photon2016/";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/";
+    } else if(colli==kHIMCEmEnr){
+        float tmpPthat[] = {30,50,80,120,170,9999};
+        for(int j=0;j<nPthat+1;j++){
+            pthatCut[j] = tmpPthat[j];
+        }
+        //fileName[0] = "/home/goyeonju/CMS/Files/photon2016/officialMC/HINPbPbWinter16DR/Pythia8_EmEnrDijet30_Hydjet_MB-HINPbPbWinter16DR-75X_mcRun2_HeavyIon_forest_v1.root";
+        //fileName[1]= "/home/goyeonju/CMS/Files/photon2016/officialMC/HINPbPbWinter16DR/Pythia8_EmEnrDijet30_50_80_120_170_Hydjet_MB-HINPbPbWinter16DR-75X_mcRun2_HeavyIon_forest_v1.root";
+        fileName[0] ="/home/goyeonju/CMS/Files/photon2016/2015-PbPb-MC_Pythia8_EmEnrichedDijet/2015-PbPb-MC_Pythia8_EmEnrichedDijet30.root";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/2015-PbPb-MC_Pythia8_EmEnrichedDijet/2015-PbPb-MC_Pythia8_EmEnrichedDijet30_50_80_120_170.root";
+    }
+/*
+    if(coll =="pp" && channel =="AllQCDPhoton"){
+        pthatCut[nPthat] = {15,30,50,80,120,9999};
+        fileName[0] = "/home/goyeonju/CMS/Files/photon2016/gsfs-Pythia8_Photon_pp_RECO_forest_v28/gsfs-Pythia8_Photon15_pp_RECO_forest_v28.root";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/gsfs-Pythia8_Photon_pp_RECO_forest_v28/gsfs-Pythia8_Photon15_30_50_80_120_pp_RECO_forest_v28.root";
+    } else if(coll =="pbpb" && channel =="AllQCDPhoton"){
+        fileName[0] ="/home/goyeonju/CMS/Files/photon2016/Pythia8_Photon_Hydjet_RECO_20160306_forest_v28_2/Pythia8_Photon15_Hydjet_RECO_20160306_forest_v28_2.root";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/Pythia8_Photon_Hydjet_RECO_20160306_forest_v28_2/Pythia8_Photon15_30_50_80_120_Hydjet_RECO_20160306_forest_v28_2.root";
+    } else if(coll =="pp" && channel =="EmEnrichedDijet"){
+        fileName[0] ="/home/goyeonju/CMS/Files/photon2016/";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/";
+    } else if(coll =="pbpb" && channel =="EmEnrichedDijet"){
+        fileName[0] ="/home/goyeonju/CMS/Files/photon2016/2015-PbPb-MC_Pythia8_EmEnrichedDijet/2015-PbPb-MC_Pythia8_EmEnrichedDijet30.root";
+        fileName[1] ="/home/goyeonju/CMS/Files/photon2016/2015-PbPb-MC_Pythia8_EmEnrichedDijet/2015-PbPb-MC_Pythia8_EmEnrichedDijet30_50_80_120_170.root";
+    }
+*/
+//    cout << "pthatWeight calculation of " << getSampleTypeName(coll) << " " << channel << endl;
 
     TFile *fin[nFile];
     TTree *t[nFile];
-    int evtN[nFile];
-    float pEnt[nFile][nFile];
-    float totalEnt[nFile];
+    float entries[nFile][nPthat];
     for(int i=0; i<nFile ; i++){
-        totalEnt[i]=0.0;
-        for(int j=0; j<nFile ; j++){
-            pEnt[i][j]=0.0;
+        for(int j=0; j<nPthat ; j++){
+            entries[i][j]=0.0;
         }
     }
-
+    
     for(int ifile=0; ifile<nFile; ifile++){
         fin[ifile] = new TFile(fileName[ifile]);
         t[ifile] = (TTree*) fin[ifile] -> Get("hiEvtAnalyzer/HiTree");
         Float_t pthat;
         TBranch *b_pthat;
         t[ifile]->SetBranchAddress("pthat",&pthat, &b_pthat);
-        for(int jj=0;jj<nFile;jj++){
-            pEnt[ifile][jj] = t[ifile]->GetEntries(Form("pthat>= %d && pthat< %d", pthatCut[jj], pthatCut[jj+1]));
+        for(int j=0;j<nPthat;j++){
+            entries[ifile][j] = t[ifile]->GetEntries(Form("pthat>= %f && pthat< %f", pthatCut[j], pthatCut[j+1]));
         }
     }
 
     //
     // Calculate weighting factor
     //
-    double weight[nFile];
-
-    weight[0] = 1.0;
-    weight[1] = pEnt[0][1]/(pEnt[0][1]*weight[0]+pEnt[1][1]);
-    weight[2] = pEnt[0][2]/(pEnt[0][2]*weight[0]+pEnt[1][2]*weight[1]+pEnt[2][2]);
-    weight[3] = pEnt[0][3]/(pEnt[0][3]*weight[0]+pEnt[1][3]*weight[1]+pEnt[2][3]*weight[2]+pEnt[3][3]);
-    weight[4] = pEnt[0][4]/(pEnt[0][4]*weight[0]+pEnt[1][4]*weight[1]+pEnt[2][4]*weight[2]+pEnt[3][3]*weight[3]+pEnt[4][4]);
-     
-    
+    double weight[nPthat];
+    for(int j=0;j<nPthat;j++){
+        weight[j] = entries[0][j]/entries[1][j];
+        cout << "pthat "<< pthatCut[j] << " weight = " << weight[j] << endl;
+    }
+   /* 
     TCanvas *can = new TCanvas("can", "can", 300,300);
     TH1D *hpthat[nFile];
     TH1D *hpthat_total;
@@ -75,4 +123,5 @@ void xSecCal(){
     hpthat_total->Add(hpthat[4]);
     
     hpthat_total->Draw();
+*/
 }

@@ -40,6 +40,7 @@ const TString ppfname = "/d3/scratch/goyeonju/files/photons2016/2015-PP-MC_Pythi
 //const TString pbpbfname = "/cms/scratch/ygo/photons/Pyquen_AllQCDPhoton30_PhotonFilter20GeV_eta24-HiForest.root";
 //const TString ppfname = "/mnt/hadoop/cms/store/user/luck/2014-photon-forests/partial_PbPb_gammaJet_MC/HiForest_QCDPhoton30.root";
 */
+
 void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200, const char* ver="v0")
 {
     SetHistTitleStyle();
@@ -138,19 +139,25 @@ void reco_efficiency(const TString coll="pbpb", int cent_i=0, int cent_f=200, co
 
         }
     }
-    h2D_Eff->Divide(h2D_Num,h2D_Den,1,1,"B");
+    h2D_Eff->Divide(h2D_Num,h2D_Den,1.,1.,"B");
 
     TH1D* h1D_Num_pt = (TH1D*) h2D_Num->ProjectionY("h1D_Num_pt",0,1); 
     TH1D* h1D_Den_pt = (TH1D*) h2D_Den->ProjectionY("h1D_Den_pt",0,1);
     TH1D* h1D_Eff_pt = (TH1D*) h1D_Den_pt->Clone("h1D_Eff_pt");
     h1D_Eff_pt->Reset();
-    h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1,1,"B"); 
+    h1D_Eff_pt->Divide(h1D_Num_pt,h1D_Den_pt,1.,1.,"B"); 
     //TEfficiency* hEff = new TEfficiency(h1D_Num_pt,h1D_Den_pt);
     h1D_Eff_pt->SetTitle(";p_{T} (GeV);Reconstruction Efficiency");
     h1D_Eff_pt->SetMarkerStyle(20);
     h1D_Eff_pt->SetAxisRange(0.95,1.001,"Y");
-    drawText(cap,0.2,0.2);
+    TCanvas* c = new TCanvas("c1", "", 700,700);
+    TGraphAsymmErrors* g_Eff_pt = new TGraphAsymmErrors(h1D_Num_pt, h1D_Den_pt); 
+    g_Eff_pt->SetMarkerStyle(20);
+    g_Eff_pt->Draw("p");
+    //drawText(cap,0.2,0.2);
     jumSun(ptBins[0],1,ptBins[nPtBin],1);
+    c->SaveAs(Form("figures/g_Eff_pt_reco_%s_nohotspot.pdf",cap));
+
     saveHistogramsToPicture(h1D_Eff_pt, "pdf",Form("reco_%s_nohotspot",cap));
     saveHistogramsToPicture(h2D_Eff, "pdf",Form("reco_%s_nohotspot",cap));
     TFile* outf = new TFile(Form("output/%s",outfname.Data()), "RECREATE");
