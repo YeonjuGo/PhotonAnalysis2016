@@ -5,4 +5,4 @@ root -l -b -q 'photonRaaSkim.C++("../../CutConfigurations/photonRaa.conf","input
 root -l -b -q 'photonRaaSkim.C++("../../CutConfigurations/photonRaa.conf","inputFiles/pbpbAllQCD.txt","/home/goyeonju/CMS/Files/photon2016/photonRaaSkimed_pbpbAllQCD_5Apr2016.root", COLL::kHIMC)'
 root -l -b -q 'photonRaaSkim.C++("../../CutConfigurations/photonRaa.conf","inputFiles/pbpbEmEnr.txt","/home/goyeonju/CMS/Files/photon2016/photonRaaSkimed_pbpbEmEnr_5Apr2016.root", COLL::kHIMC)'
 root -l -b -q 'photonRaaSkim.C++("../../CutConfigurations/photonRaa.conf","inputFiles/ppDATA.txt","/home/goyeonju/CMS/Files/photon2016/photonRaaSkimed_ppDATA_5Apr2016.root", COLL::kPP)'
-root -l -b -q 'photonRaaSkim.C++("../../CutConfigurations/photonRaa.conf","inputFiles/pbpbDATA.txt","/home/goyeonju/CMS/Files/photon2016/photonRaaSkimed_pbpbDATA_5Apr2016.root", COLL::kHI)'
+#root -l -b -q 'photonRaaSkim.C++("../../CutConfigurations/photonRaa.conf","inputFiles/pbpbDATA.txt","/home/goyeonju/CMS/Files/photon2016/photonRaaSkimed_pbpbDATA_5Apr2016.root", COLL::kHI)'

@@ -32,7 +32,8 @@ TString pbpbMCfname = "/home/goyeonju/CMS/Files/photon2016/2015-PbPb-MC-AllQCDPh
 
 
 //const double ptBins[] = {20,30,40,50,60,70,80,90,100,120,140,180,220};
-const double ptBins[] = {40,50,60,70,80};
+const double ptBins[] = {40,50,60,80,999};
+const double ptBins_draw[] = {40,50,60,80,120};
 const int nPtBin = sizeof(ptBins)/sizeof(double) - 1;
 //const double etaBins[] = {0.0,1.44,2.0,2.5};
 const double etaBins[] = {0.0,1.44};

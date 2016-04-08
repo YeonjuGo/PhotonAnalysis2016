@@ -34,7 +34,17 @@ const int col[] = {1,2,3,4,6,7,28,46,41};
 const int ycol[] = {8,9,28,46,41};
 const int marker[] = {24,25,26,27,28,29,31,33,34};
 
-void saveHistogramsToPicture(TH1* h, const char* fileType="pdf", const char* caption="", const char* directoryToBeSavedIn="figures", int styleIndex=0, int rebin =1){
+TH1D* changeToPrettyBin(TH1D* h){
+    TH1D* hnew = new TH1D(Form("%s_prettyBin",h->GetName()),Form("%s",h->GetTitle()),nPtBin,ptBins_draw);
+    for(int i=0;i<h->GetNbinsX();++i){
+        hnew->SetBinContent(i+1,h->GetBinContent(i+1));
+        float err = h->GetBinError(i+1);
+        if(err!=0) hnew->SetBinError(i+1,err);
+        else hnew->SetBinError(i+1,0.0001);
+    }
+    return hnew;
+}
+void saveHistogramsToPicture(TH1* h, const char* fileType="pdf", const char* caption="", const char* directoryToBeSavedIn="figures", int styleIndex=1, int rebin =1){
     TCanvas* c1=new TCanvas();
     if(rebin!=1)
     {
